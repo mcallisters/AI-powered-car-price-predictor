@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Price Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .row-full {
+            grid-column: 1 / -1;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .result-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .currency {
+            font-size: 20px;
+        }
+
+        .error {
+            margin-top: 20px;
+            padding: 12px 16px;
+            background: #fee;
+            color: #c33;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .status-badge.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Car Price Predictor</h1>
+            <p>Enter your car details to get a price estimate</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="row">
+                <div class="form-group">
+                    <label for="manufacturer">Manufacturer *</label>
+                    <input 
+                        type="text" 
+                        id="manufacturer" 
+                        name="manufacturer" 
+                        placeholder="e.g., Toyota, Honda"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="model">Model *</label>
+                    <input 
+                        type="text" 
+                        id="model" 
+                        name="model" 
+                        placeholder="e.g., Camry, Civic"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="year">Year *</label>
+                    <input 
+                        type="number" 
+                        id="year" 
+                        name="year" 
+                        placeholder="e.g., 2020"
+                        min="1980"
+                        max="2025"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="mileage">Mileage (miles) *</label>
+                    <input 
+                        type="number" 
+                        id="mileage" 
+                        name="mileage" 
+                        placeholder="e.g., 50000"
+                        min="0"
+                        step="100"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="fuelType">Fuel Type *</label>
+                    <select id="fuelType" name="fuelType" required>
+                        <option value="">Select fuel type</option>
+                        <option value="Petrol">Petrol</option>
+                        <option value="Diesel">Diesel</option>
+                        <option value="Hybrid">Hybrid</option>
+                        <option value="Electric">Electric</option>
+                        <option value="LPG">LPG</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="engineSize">Engine Size (liters) *</label>
+                    <input 
+                        type="number" 
+                        id="engineSize" 
+                        name="engineSize" 
+                        placeholder="e.g., 2.0"
+                        min="0.5"
+                        step="0.1"
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit">Predict Price</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <span class="spinner"></span>
+            Predicting price...
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <div class="result-label">Estimated Price</div>
+            <div class="result-price">
+                <span class="currency">$</span><span id="predictedPrice">0</span>
+            </div>
+            <div class="status-badge">✓ Prediction Complete</div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const result = document.getElementById('result');
+        const predictedPriceEl = document.getElementById('predictedPrice');
+
+        // The HTML page is where users input their car data (manufacturer, model, year, 
+        // mileage, fuel type, engine size). When they click "Predict Price," the 
+        // JavaScript code:
+        //
+        // 1. Collects all the form input values from the HTML
+        // 2. Packages them into a JSON object called formData
+        // 3. Sends that JSON to the /predict endpoint (specified by API_URL)
+        //
+        // FastAPI receives that JSON at the /predict endpoint and processes it in the 
+        // predict_car_price function.
+        //
+        // Flow:
+        // - HTML form = User interface for data entry
+        // - JavaScript = Collects the data and sends it
+        // - API_URL = '/predict' = Specifies WHERE to send it
+        // - FastAPI endpoint = Receives and processes the data
+        //
+        // Without the HTML page, users would have no way to input the data. Without the 
+        // API_URL, the JavaScript wouldn't know where to send it. Both are essential 
+        // parts of the system working together.
+
+        // API endpoint
+        const API_URL = '/predict';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide previous messages
+            error.classList.remove('show');
+            result.classList.remove('show');
+            loading.classList.add('show');
+
+            // Collect form data
+            const formData = {
+                manufacturer: document.getElementById('manufacturer').value.trim(),
+                model: document.getElementById('model').value.trim(),
+                year: parseInt(document.getElementById('year').value),
+                mileage: parseFloat(document.getElementById('mileage').value),
+                fuel_type: document.getElementById('fuelType').value,
+                engine_size: parseFloat(document.getElementById('engineSize').value)
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                loading.classList.remove('show');
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display result
+                predictedPriceEl.textContent = data.predicted_price.toLocaleString();
+                result.classList.add('show');
+
+            } catch (err) {
+                loading.classList.remove('show');
+                error.classList.add('show');
+                error.textContent = `Error: ${err.message}. Make sure your backend is running at ${API_URL}`;
+            }
+        });
+    </script>
+</body>
+</html>
