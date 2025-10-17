@@ -27,8 +27,8 @@ print("Base directory:", base_dir)
 print("Looking for index.html at:", os.path.join(base_dir, "index.html"))
 print("index.html exists:", os.path.exists(os.path.join(base_dir, "index.html")))
 
-# Build path to the model (4 levels up + /models/model.pkl)
-model_path = os.path.join(base_dir, '../../../../models/model.pkl')
+# Build path to the model in the same directory as app.py
+model_path = os.path.join(base_dir, 'model.pkl')
 
 print("Looking for model at:", os.path.abspath(model_path))
 # Load the trained model using joblib
