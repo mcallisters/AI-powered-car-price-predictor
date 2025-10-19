@@ -82,7 +82,7 @@ def predict_car_price(payload: dict):
     """
 
     # Extract features from payload
-    mileage_per_year = mileage / age if age > 0 else mileage
+    
     manufacturer = str(payload.get("manufacturer"))
     model_name = str(payload.get("model"))
     year = int(payload.get("year"))
@@ -93,7 +93,7 @@ def predict_car_price(payload: dict):
     # Derived features (required by training pipeline)
     CURRENT_YEAR = 2025
     age = max(CURRENT_YEAR - year, 0)
-    
+    mileage_per_year = mileage / age if age > 0 else mileage
     vintage = int(age > 20)
 
     # Organize features into a dictionary with exact column names the model expects
