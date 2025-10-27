@@ -3,7 +3,7 @@ fastapi==0.120.0
 uvicorn==0.38.0
 
 # Data processing
-pandas==1.26.4
+pandas==2.2.0
 numpy==1.26.4
 
 # Machine learning
